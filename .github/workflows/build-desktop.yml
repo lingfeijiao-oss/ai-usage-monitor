@@ -3,8 +3,13 @@ name: build-desktop
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -263,3 +268,4 @@ jobs:
           path: |
             release/ai-usage-monitor_0.3.1_amd64.deb
             release/ai-usage-monitor-linux-amd64.tar.gz
+

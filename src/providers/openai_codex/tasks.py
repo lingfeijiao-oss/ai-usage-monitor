@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 from core.codex_discovery import discover_profiles
@@ -66,11 +66,27 @@ def _source_kind(source: Any) -> str | None:
     return None
 
 
+def _looks_windows_path(value: str) -> bool:
+    text = value.strip()
+    return (
+        len(text) >= 3
+        and text[1] == ":"
+        and text[2] in ("\\", "/")
+    ) or "\\" in text
+
+
 def _project_name(cwd: Any) -> str | None:
     if not isinstance(cwd, str) or not cwd.strip():
         return None
+
+    text = cwd.strip()
+
     try:
-        return Path(cwd).name or None
+        if _looks_windows_path(text):
+            return PureWindowsPath(text).name or None
+
+        return PurePosixPath(text).name or None
+
     except (OSError, ValueError):
         return None
 
@@ -310,4 +326,5 @@ def read_thread_usage(
         "provenance": "OFFICIAL_ESTIMATE",
         "threadUsage": usage,
     }
+
 

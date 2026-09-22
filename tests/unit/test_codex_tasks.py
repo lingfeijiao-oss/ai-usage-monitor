@@ -63,6 +63,38 @@ class CodexTaskTests(unittest.TestCase):
             persisted,
         )
 
+    def test_project_name_handles_windows_path_on_any_host(self):
+        raw = {
+            "id": "windows-path",
+            "cwd": r"D:\Aevora",
+        }
+
+        task = normalize_thread(
+            raw,
+            Path("."),
+        )
+
+        self.assertEqual(
+            task["projectName"],
+            "Aevora",
+        )
+
+    def test_project_name_handles_posix_path_on_any_host(self):
+        raw = {
+            "id": "posix-path",
+            "cwd": "/work/Aevora",
+        }
+
+        task = normalize_thread(
+            raw,
+            Path("."),
+        )
+
+        self.assertEqual(
+            task["projectName"],
+            "Aevora",
+        )
+
     def test_preview_is_bounded(self):
         raw = {
             "id": "x",
@@ -82,3 +114,4 @@ class CodexTaskTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
