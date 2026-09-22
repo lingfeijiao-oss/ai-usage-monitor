@@ -1,0 +1,265 @@
+name: build-desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+  PYINSTALLER_VERSION: "6.22.3"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Release preflight
+        run: |
+          python scripts/release_preflight.py
+
+      - name: Unit tests
+        run: |
+          export PYTHONPATH="$PWD/src"
+          python -m unittest discover -s tests/unit -v
+
+  windows-x64:
+    needs: preflight
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==${env:PYINSTALLER_VERSION}"
+          choco install innosetup --yes --no-progress
+
+      - name: Verify Tk
+        shell: pwsh
+        run: |
+          python -c "import tkinter; print('Tk OK')"
+
+      - name: Test
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH = "$PWD\src"
+          python -m unittest discover -s tests/unit -v
+          python scripts/release_preflight.py
+
+      - name: Build Windows executable
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed `
+            --name AIUsageMonitor `
+            --paths src `
+            src/main.py
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            packaging\windows\AIUsageMonitor.iss
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows-x64
+          path: release/AIUsageMonitor-Setup-Windows-x64.exe
+
+  macos-arm64:
+    needs: preflight
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==$PYINSTALLER_VERSION"
+
+      - name: Verify platform and Tk
+        run: |
+          uname -m
+          python -c "import platform, tkinter; print(platform.machine()); print('Tk OK')"
+
+      - name: Test
+        run: |
+          export PYTHONPATH="$PWD/src"
+          python -m unittest discover -s tests/unit -v
+          python scripts/release_preflight.py
+
+      - name: Build macOS ARM64 app
+        run: |
+          pyinstaller --noconfirm --clean --windowed \
+            --name AIUsageMonitor \
+            --paths src \
+            src/main.py
+
+      - name: Build ARM64 DMG
+        run: |
+          rm -rf release
+          mkdir -p release/dmg
+          cp -R dist/AIUsageMonitor.app release/dmg/
+          cp LICENSE release/dmg/
+          hdiutil create \
+            -volname "AI Usage Monitor" \
+            -srcfolder release/dmg \
+            -ov \
+            -format UDZO \
+            release/AIUsageMonitor-macOS-arm64.dmg
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64
+          path: release/AIUsageMonitor-macOS-arm64.dmg
+
+  macos-intel:
+    needs: preflight
+    runs-on: macos-15-intel
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==$PYINSTALLER_VERSION"
+
+      - name: Verify platform and Tk
+        run: |
+          uname -m
+          python -c "import platform, tkinter; print(platform.machine()); print('Tk OK')"
+
+      - name: Test
+        run: |
+          export PYTHONPATH="$PWD/src"
+          python -m unittest discover -s tests/unit -v
+          python scripts/release_preflight.py
+
+      - name: Build macOS Intel app
+        run: |
+          pyinstaller --noconfirm --clean --windowed \
+            --name AIUsageMonitor \
+            --paths src \
+            src/main.py
+
+      - name: Build Intel DMG
+        run: |
+          rm -rf release
+          mkdir -p release/dmg
+          cp -R dist/AIUsageMonitor.app release/dmg/
+          cp LICENSE release/dmg/
+          hdiutil create \
+            -volname "AI Usage Monitor" \
+            -srcfolder release/dmg \
+            -ov \
+            -format UDZO \
+            release/AIUsageMonitor-macOS-x64.dmg
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-x64
+          path: release/AIUsageMonitor-macOS-x64.dmg
+
+  linux-amd64:
+    needs: preflight
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tk tcl
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller==$PYINSTALLER_VERSION"
+
+      - name: Verify platform and Tk
+        run: |
+          uname -m
+          python -c "import platform, tkinter; print(platform.machine()); print('Tk OK')"
+
+      - name: Test
+        run: |
+          export PYTHONPATH="$PWD/src"
+          python -m unittest discover -s tests/unit -v
+          python scripts/release_preflight.py
+
+      - name: Build Linux executable
+        run: |
+          pyinstaller --noconfirm --clean --onefile \
+            --name ai-usage-monitor \
+            --paths src \
+            src/main.py
+
+      - name: Build DEB and portable archive
+        run: |
+          rm -rf package-root release
+          mkdir -p \
+            package-root/DEBIAN \
+            package-root/usr/bin \
+            package-root/usr/share/applications \
+            package-root/usr/share/doc/ai-usage-monitor \
+            release
+
+          cp packaging/linux/control package-root/DEBIAN/control
+          cp dist/ai-usage-monitor package-root/usr/bin/ai-usage-monitor
+          chmod 0755 package-root/usr/bin/ai-usage-monitor
+
+          cp packaging/linux/ai-usage-monitor.desktop \
+            package-root/usr/share/applications/ai-usage-monitor.desktop
+
+          cp packaging/linux/copyright \
+            package-root/usr/share/doc/ai-usage-monitor/copyright
+
+          cp LICENSE \
+            package-root/usr/share/doc/ai-usage-monitor/LICENSE
+
+          dpkg-deb --build \
+            package-root \
+            release/ai-usage-monitor_0.3.1_amd64.deb
+
+          tar -C dist -czf \
+            release/ai-usage-monitor-linux-amd64.tar.gz \
+            ai-usage-monitor
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-amd64
+          path: |
+            release/ai-usage-monitor_0.3.1_amd64.deb
+            release/ai-usage-monitor-linux-amd64.tar.gz

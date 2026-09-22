@@ -1,0 +1,25 @@
+[project]
+name = "ai-usage-monitor"
+version = "0.3.1"
+description = "Local-first multi-provider AI usage, quota and token monitor"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+
+[tool.ai-usage-monitor]
+metric_provenance = [
+    "VERIFIED",
+    "LOCAL_OBSERVED",
+    "OBSERVED",
+    "ESTIMATED",
+    "UNSUPPORTED",
+]
+
+[tool.ai-usage-monitor.release]
+supported_platforms = [
+    "windows",
+    "macos",
+    "linux",
+]
+foreground_only = true
+web_server_required = false
+background_service_required = false

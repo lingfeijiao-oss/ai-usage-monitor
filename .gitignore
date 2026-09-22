@@ -1,0 +1,38 @@
+# Local runtime data
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Local/generated Codex schema snapshots
+schemas/
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+config/local.*
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build/package output
+build/
+dist/
+out/
+release/
+package-root/
+*.spec
+
+# Node
+node_modules/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: AI Usage Monitor
+Source: https://github.com/
+
+Files: *
+Copyright: AI Usage Monitor contributors
+License: Apache-2.0
+ See /usr/share/common-licenses/Apache-2.0 on Debian-compatible systems.

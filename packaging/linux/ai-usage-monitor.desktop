@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AI Usage Monitor
+Comment=Local-first AI quota and token monitor
+Exec=ai-usage-monitor
+Terminal=false
+Categories=Utility;Development;
+StartupNotify=true
