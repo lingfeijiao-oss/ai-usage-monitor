@@ -96,6 +96,65 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
             packaging\windows\AIUsageMonitor.iss
 
+      - name: Install Windows package and smoke
+        shell: pwsh
+        run: |
+          $testDir = Join-Path $env:TEMP ("AIUsageMonitor-CI-" + [Guid]::NewGuid().ToString("N"))
+          New-Item -ItemType Directory -Force -Path $testDir | Out-Null
+
+          $installer = "$PWD\release\AIUsageMonitor-Setup-Windows-x64.exe"
+
+          $install = Start-Process `
+            -FilePath $installer `
+            -ArgumentList @(
+              '/VERYSILENT',
+              '/SUPPRESSMSGBOXES',
+              '/NORESTART',
+              '/NOICONS',
+              "/DIR=`"$testDir`""
+            ) `
+            -PassThru `
+            -Wait
+
+          if ($install.ExitCode -ne 0) {
+            throw "Silent installer exited with $($install.ExitCode)"
+          }
+
+          $installedExe = Join-Path $testDir 'AIUsageMonitor.exe'
+
+          if (-not (Test-Path -LiteralPath $installedExe)) {
+            throw "Installed executable missing: $installedExe"
+          }
+
+          $smoke = Start-Process `
+            -FilePath $installedExe `
+            -ArgumentList '--smoke' `
+            -PassThru `
+            -Wait
+
+          if ($smoke.ExitCode -ne 0) {
+            throw "Installed Windows executable smoke failed with $($smoke.ExitCode)"
+          }
+
+          $uninstaller = Join-Path $testDir 'unins000.exe'
+
+          if (Test-Path -LiteralPath $uninstaller) {
+            $uninstall = Start-Process `
+              -FilePath $uninstaller `
+              -ArgumentList @(
+                '/VERYSILENT',
+                '/SUPPRESSMSGBOXES',
+                '/NORESTART'
+              ) `
+              -PassThru `
+              -Wait
+
+            if ($uninstall.ExitCode -ne 0) {
+              throw "Silent uninstaller exited with $($uninstall.ExitCode)"
+            }
+          }
+
+          Write-Host "Windows installer acceptance: PASS"
       - name: Generate Windows SHA256
         shell: pwsh
         run: |
@@ -166,6 +225,29 @@ jobs:
             -format UDZO \
             release/AIUsageMonitor-macOS-arm64.dmg
 
+      - name: Mount ARM64 DMG and smoke installed app
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MOUNT="$(mktemp -d)"
+          cleanup() {
+            hdiutil detach "$MOUNT" -quiet || true
+            rmdir "$MOUNT" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          hdiutil attach \
+            -nobrowse \
+            -readonly \
+            -mountpoint "$MOUNT" \
+            release/AIUsageMonitor-macOS-arm64.dmg
+
+          test -x "$MOUNT/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor"
+
+          "$MOUNT/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor" --smoke
+
+          echo "macOS ARM64 DMG acceptance: PASS"
       - name: Generate macOS ARM64 SHA256
         run: |
           cd release
@@ -234,6 +316,29 @@ jobs:
             -format UDZO \
             release/AIUsageMonitor-macOS-x64.dmg
 
+      - name: Mount Intel DMG and smoke installed app
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MOUNT="$(mktemp -d)"
+          cleanup() {
+            hdiutil detach "$MOUNT" -quiet || true
+            rmdir "$MOUNT" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          hdiutil attach \
+            -nobrowse \
+            -readonly \
+            -mountpoint "$MOUNT" \
+            release/AIUsageMonitor-macOS-x64.dmg
+
+          test -x "$MOUNT/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor"
+
+          "$MOUNT/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor" --smoke
+
+          echo "macOS Intel DMG acceptance: PASS"
       - name: Generate macOS Intel SHA256
         run: |
           cd release
@@ -325,6 +430,23 @@ jobs:
             release/ai-usage-monitor-linux-amd64.tar.gz \
             ai-usage-monitor
 
+      - name: Extract DEB and smoke installed payload
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf package-test-root
+          mkdir -p package-test-root
+
+          dpkg-deb -x \
+            release/ai-usage-monitor_0.3.1_amd64.deb \
+            package-test-root
+
+          test -x package-test-root/usr/bin/ai-usage-monitor
+
+          package-test-root/usr/bin/ai-usage-monitor --smoke
+
+          echo "Linux DEB acceptance: PASS"
       - name: Generate Linux SHA256
         run: |
           cd release
@@ -459,4 +581,5 @@ jobs:
           gh release view "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --json tagName,name,isPrerelease,url,assets
+
 

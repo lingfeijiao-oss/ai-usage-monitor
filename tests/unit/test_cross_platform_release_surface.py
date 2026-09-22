@@ -120,6 +120,33 @@ class CrossPlatformReleaseSurfaceTests(unittest.TestCase):
             )
 
 
+    def test_package_acceptance_gates_are_present(self):
+        workflow = (
+            ROOT
+            / ".github"
+            / "workflows"
+            / "build-desktop.yml"
+        ).read_text(
+            encoding="utf-8-sig"
+        )
+
+        for expected in (
+            "Install Windows package and smoke",
+            "Mount ARM64 DMG and smoke installed app",
+            "Mount Intel DMG and smoke installed app",
+            "Extract DEB and smoke installed payload",
+            "Windows installer acceptance: PASS",
+            "macOS ARM64 DMG acceptance: PASS",
+            "macOS Intel DMG acceptance: PASS",
+            "Linux DEB acceptance: PASS",
+        ):
+            self.assertIn(
+                expected,
+                workflow,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
