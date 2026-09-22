@@ -1,0 +1,85 @@
+name: Bug report
+description: Report a reproducible problem in AI Usage Monitor.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not include credentials, prompts, private rollout contents, or proprietary source code.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows x64
+        - macOS ARM64
+        - macOS Intel
+        - Linux amd64
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: AI Usage Monitor version
+      placeholder: v0.3.1-rc.1
+    validations:
+      required: true
+
+  - type: input
+    id: codex_version
+    attributes:
+      label: Codex version
+      description: Run `codex --version` if available.
+      placeholder: codex-cli 0.x.x
+    validations:
+      required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observable problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Launch AI Usage Monitor
+        2. Select ...
+        3. Open ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: safe_logs
+    attributes:
+      label: Safe logs or screenshots
+      description: |
+        Include only sanitized material. Remove account identifiers, prompts,
+        source code, credentials, browser cookies, and private rollout content.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I have removed credentials, prompts, private rollout content, and proprietary source code.
+          required: true

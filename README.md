@@ -121,6 +121,18 @@ Every target runs:
 
 Release-candidate publishing is automated only after all target jobs pass.
 
+## Feedback and support
+
+AI Usage Monitor is currently a release candidate. Real-world installation and
+usage feedback is useful.
+
+- [Report a bug](https://github.com/lingfeijiao-oss/ai-usage-monitor/issues/new?template=bug_report.yml)
+- [Report an installation/startup problem](https://github.com/lingfeijiao-oss/ai-usage-monitor/issues/new?template=installation_problem.yml)
+- [Request a feature](https://github.com/lingfeijiao-oss/ai-usage-monitor/issues/new?template=feature_request.yml)
+- See [SUPPORT.md](SUPPORT.md) for privacy-safe reporting guidance.
+
+Do not include credentials, prompts, private rollout content, or proprietary
+source code in public issues.
 ## Development
 
 Run the release preflight:
@@ -151,4 +163,5 @@ implemented without changing the core project-folder accounting model.
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
 

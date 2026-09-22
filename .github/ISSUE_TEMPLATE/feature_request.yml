@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest an improvement or additional provider/metric workflow.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: What developer problem should this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Desktop UI
+        - Codex discovery
+        - Quota/account data
+        - Project token analytics
+        - Model/reasoning analytics
+        - Packaging/install
+        - Privacy/security
+        - Additional provider
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Metric provenance considerations
+      description: If this involves usage numbers, explain whether the source would be provider-verified, locally observed, estimated, or unknown.
+    validations:
+      required: false

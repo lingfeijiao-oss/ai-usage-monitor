@@ -1,0 +1,57 @@
+name: Installation or startup problem
+description: Report packaging, installation, startup, auto-discovery, or login-flow problems.
+title: "[Install] "
+labels:
+  - installation
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows x64
+        - macOS ARM64
+        - macOS Intel
+        - Linux amd64
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: artifact
+    attributes:
+      label: Package used
+      placeholder: AIUsageMonitor-Setup-Windows-x64.exe
+    validations:
+      required: true
+
+  - type: textarea
+    id: stage
+    attributes:
+      label: Where does it fail?
+      placeholder: Download, OS trust warning, install, launch, Codex detection, login, or monitoring.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Exact visible error or behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: codex
+    attributes:
+      label: Codex environment
+      description: Include `codex --version` and whether Codex itself can launch. Do not include tokens or credentials.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: rc_warning
+    attributes:
+      label: Release-candidate note
+      options:
+        - label: I understand Windows/macOS release-candidate artifacts are currently unsigned and macOS is not notarized.
+          required: true
