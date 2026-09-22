@@ -8,6 +8,9 @@ It combines provider-verified account quota/reset data with locally observed
 project-folder token analytics, while keeping those two evidence classes
 explicitly separate.
 
+## Product preview
+
+![AI Usage Monitor showing Codex quota, project token usage, model share, and reasoning-depth usage](docs/images/ai-usage-monitor.png)
 ## Current release
 
 **v0.3.1-rc.1** is the first public cross-platform release candidate.
@@ -148,3 +151,4 @@ implemented without changing the core project-folder accounting model.
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
