@@ -94,5 +94,32 @@ class CrossPlatformReleaseSurfaceTests(unittest.TestCase):
             )
 
 
+    def test_prerelease_automation_is_present(self):
+        workflow = (
+            ROOT
+            / ".github"
+            / "workflows"
+            / "build-desktop.yml"
+        ).read_text(
+            encoding="utf-8-sig"
+        )
+
+        for expected in (
+            "release-prerelease:",
+            "actions/download-artifact@v8",
+            "contents: write",
+            "gh release create",
+            "--verify-tag",
+            "--prerelease",
+            "--latest=false",
+            "release-notes.md",
+        ):
+            self.assertIn(
+                expected,
+                workflow,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
+
