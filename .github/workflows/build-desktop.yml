@@ -76,6 +76,19 @@ jobs:
             --paths src `
             src/main.py
 
+      - name: Smoke packaged Windows executable
+        shell: pwsh
+        run: |
+          $p = Start-Process `
+            -FilePath "$PWD\dist\AIUsageMonitor.exe" `
+            -ArgumentList '--smoke' `
+            -PassThru `
+            -Wait
+          if ($p.ExitCode -ne 0) {
+            throw "Packaged Windows smoke failed with exit code $($p.ExitCode)"
+          }
+          Write-Host "Packaged Windows smoke: PASS"
+
       - name: Build Windows installer
         shell: pwsh
         run: |
@@ -83,10 +96,21 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
             packaging\windows\AIUsageMonitor.iss
 
+      - name: Generate Windows SHA256
+        shell: pwsh
+        run: |
+          $installer = "release\AIUsageMonitor-Setup-Windows-x64.exe"
+          $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  AIUsageMonitor-Setup-Windows-x64.exe" |
+            Set-Content -LiteralPath "release\SHA256SUMS-windows-x64.txt" -Encoding ascii
+          Get-Content "release\SHA256SUMS-windows-x64.txt"
+
       - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
-          path: release/AIUsageMonitor-Setup-Windows-x64.exe
+          path: |
+            release/AIUsageMonitor-Setup-Windows-x64.exe
+            release/SHA256SUMS-windows-x64.txt
 
   macos-arm64:
     needs: preflight
@@ -122,6 +146,13 @@ jobs:
             --paths src \
             src/main.py
 
+      - name: Smoke packaged macOS ARM64 app
+        run: |
+          test "$(uname -m)" = "arm64"
+          file dist/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor
+          dist/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor --smoke
+          echo "Packaged macOS ARM64 smoke: PASS"
+
       - name: Build ARM64 DMG
         run: |
           rm -rf release
@@ -135,10 +166,19 @@ jobs:
             -format UDZO \
             release/AIUsageMonitor-macOS-arm64.dmg
 
+      - name: Generate macOS ARM64 SHA256
+        run: |
+          cd release
+          shasum -a 256 AIUsageMonitor-macOS-arm64.dmg \
+            > SHA256SUMS-macOS-arm64.txt
+          cat SHA256SUMS-macOS-arm64.txt
+
       - uses: actions/upload-artifact@v7
         with:
           name: macos-arm64
-          path: release/AIUsageMonitor-macOS-arm64.dmg
+          path: |
+            release/AIUsageMonitor-macOS-arm64.dmg
+            release/SHA256SUMS-macOS-arm64.txt
 
   macos-intel:
     needs: preflight
@@ -174,6 +214,13 @@ jobs:
             --paths src \
             src/main.py
 
+      - name: Smoke packaged macOS Intel app
+        run: |
+          test "$(uname -m)" = "x86_64"
+          file dist/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor
+          dist/AIUsageMonitor.app/Contents/MacOS/AIUsageMonitor --smoke
+          echo "Packaged macOS Intel smoke: PASS"
+
       - name: Build Intel DMG
         run: |
           rm -rf release
@@ -187,10 +234,19 @@ jobs:
             -format UDZO \
             release/AIUsageMonitor-macOS-x64.dmg
 
+      - name: Generate macOS Intel SHA256
+        run: |
+          cd release
+          shasum -a 256 AIUsageMonitor-macOS-x64.dmg \
+            > SHA256SUMS-macOS-x64.txt
+          cat SHA256SUMS-macOS-x64.txt
+
       - uses: actions/upload-artifact@v7
         with:
           name: macos-x64
-          path: release/AIUsageMonitor-macOS-x64.dmg
+          path: |
+            release/AIUsageMonitor-macOS-x64.dmg
+            release/SHA256SUMS-macOS-x64.txt
 
   linux-amd64:
     needs: preflight
@@ -231,6 +287,13 @@ jobs:
             --paths src \
             src/main.py
 
+      - name: Smoke packaged Linux executable
+        run: |
+          test "$(uname -m)" = "x86_64"
+          file dist/ai-usage-monitor
+          ./dist/ai-usage-monitor --smoke
+          echo "Packaged Linux smoke: PASS"
+
       - name: Build DEB and portable archive
         run: |
           rm -rf package-root release
@@ -262,10 +325,19 @@ jobs:
             release/ai-usage-monitor-linux-amd64.tar.gz \
             ai-usage-monitor
 
+      - name: Generate Linux SHA256
+        run: |
+          cd release
+          sha256sum \
+            ai-usage-monitor_0.3.1_amd64.deb \
+            ai-usage-monitor-linux-amd64.tar.gz \
+            > SHA256SUMS-linux-amd64.txt
+          cat SHA256SUMS-linux-amd64.txt
+
       - uses: actions/upload-artifact@v7
         with:
           name: linux-amd64
           path: |
             release/ai-usage-monitor_0.3.1_amd64.deb
             release/ai-usage-monitor-linux-amd64.tar.gz
-
+            release/SHA256SUMS-linux-amd64.txt
